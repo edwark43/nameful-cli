@@ -1,11 +1,6 @@
 use crate::app::{App, CurrentScreen};
 use ratatui::{
-    Frame,
-    layout::Constraint,
-    prelude::{Direction, Layout, Rect},
-    style::{Color, Modifier, Style},
-    text::{Line, Span, Text},
-    widgets::{Block, Borders, List, ListItem, ListState, Paragraph},
+    layout::{Alignment, Constraint}, prelude::{Direction, Layout, Rect}, style::{Color, Modifier, Style}, text::{Line, Span, Text}, widgets::{Block, Borders, Clear, List, ListItem, ListState, Paragraph}, Frame
 };
 use serde_json::{Map, Value};
 use std::io::{Error, ErrorKind};
@@ -54,9 +49,7 @@ pub fn ui(
 
     let list = List::new(list_items).highlight_style(Modifier::REVERSED);
 
-    if let CurrentScreen::Main = app.current_screen {
-        frame.render_stateful_widget(list, chunks[1], list_state);
-    }
+    frame.render_stateful_widget(list, chunks[1], list_state);
 
     let current_navigation_text = vec![
         match app.current_screen {
@@ -122,7 +115,13 @@ pub fn ui(
 
     let mut popup_block = Block::default()
         .borders(Borders::NONE)
-        .style(Style::default().bg(Color::DarkGray));
+        .style(Style::default().bg(Color::DarkGray))
+        .title_alignment(Alignment::Center);
+    match &app.current_screen {
+        CurrentScreen::Editing | CurrentScreen::Adding => popup_block = popup_block.title("Enter a new value"),
+        CurrentScreen::Deleting => popup_block = popup_block.title("Are you sure?"),
+        _ => {},
+    }
 
     let area = centered_rect(60, 25, frame.area());
 
@@ -137,7 +136,7 @@ pub fn ui(
         .borders(Borders::ALL)
         .style(Style::default().bg(Color::LightYellow).fg(Color::Black));
     if let Some(editing) = &app.currently_editing {
-        popup_block = popup_block.title("Enter a new value");
+        frame.render_widget(Clear, area);
         frame.render_widget(&popup_block, area);
         let trimmed = match editing.key.trim_start_matches('0') {
             "" => "0",
@@ -151,7 +150,7 @@ pub fn ui(
     }
 
     if let Some(adding) = &app.currently_adding {
-        popup_block = popup_block.title("Enter a new value");
+        frame.render_widget(Clear, area);
         frame.render_widget(&popup_block, area);
         let key_block = Block::default().title("Key").borders(Borders::ALL);
         let value_block = Block::default()
@@ -173,9 +172,8 @@ pub fn ui(
     }
 
     if let Some(deleting) = &app.currently_deleting {
-        popup_block = popup_block.title("Are you sure?");
+        frame.render_widget(Clear, area);
         frame.render_widget(&popup_block, area);
-
         let mut yes_block = Block::default().borders(Borders::ALL);
         let mut no_block = Block::default().borders(Borders::ALL);
         let selected_style = Style::default().bg(Color::LightYellow).fg(Color::Black);
