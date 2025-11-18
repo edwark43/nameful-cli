@@ -1,6 +1,11 @@
 use crate::app::{App, CurrentScreen};
 use ratatui::{
-    layout::{Alignment, Constraint}, prelude::{Direction, Layout, Rect}, style::{Color, Modifier, Style}, text::{Line, Span, Text}, widgets::{Block, Borders, Clear, List, ListItem, ListState, Paragraph}, Frame
+    Frame,
+    layout::{Alignment, Constraint},
+    prelude::{Direction, Layout, Rect},
+    style::{Color, Modifier, Style},
+    text::{Line, Span, Text},
+    widgets::{Block, Borders, Clear, List, ListItem, ListState, Paragraph, Wrap},
 };
 use serde_json::{Map, Value};
 use std::io::{Error, ErrorKind};
@@ -53,7 +58,9 @@ pub fn ui(
 
     let current_navigation_text = vec![
         match app.current_screen {
-            CurrentScreen::Main => Span::styled("Normal Mode", Style::default().fg(Color::DarkGray)),
+            CurrentScreen::Main => {
+                Span::styled("Normal Mode", Style::default().fg(Color::DarkGray))
+            }
             CurrentScreen::Editing => {
                 Span::styled("Editing Mode", Style::default().fg(Color::Green))
             }
@@ -65,11 +72,19 @@ pub fn ui(
         .to_owned(),
         Span::styled(" | ", Style::default().fg(Color::White)),
         match app.current_screen {
-            CurrentScreen::Main => Span::styled("Not Editing Anything", Style::default().fg(Color::Gray)),
-            CurrentScreen::Editing => Span::styled("Editing Json Value", Style::default().fg(Color::LightGreen)),
-            CurrentScreen::Adding => Span::styled("Adding Json Pair", Style::default().fg(Color::LightBlue)),
-            CurrentScreen::Deleting => Span::styled("Deleting Json Pair", Style::default().fg(Color::LightRed)),
-    }
+            CurrentScreen::Main => {
+                Span::styled("Not Editing Anything", Style::default().fg(Color::Gray))
+            }
+            CurrentScreen::Editing => {
+                Span::styled("Editing Json Value", Style::default().fg(Color::LightGreen))
+            }
+            CurrentScreen::Adding => {
+                Span::styled("Adding Json Pair", Style::default().fg(Color::LightBlue))
+            }
+            CurrentScreen::Deleting => {
+                Span::styled("Deleting Json Pair", Style::default().fg(Color::LightRed))
+            }
+        },
     ];
 
     let mode_footer = Paragraph::new(Line::from(current_navigation_text))
@@ -118,9 +133,11 @@ pub fn ui(
         .style(Style::default().bg(Color::DarkGray))
         .title_alignment(Alignment::Center);
     match &app.current_screen {
-        CurrentScreen::Editing | CurrentScreen::Adding => popup_block = popup_block.title("Enter a new value"),
+        CurrentScreen::Editing | CurrentScreen::Adding => {
+            popup_block = popup_block.title("Enter a new value")
+        }
         CurrentScreen::Deleting => popup_block = popup_block.title("Are you sure?"),
-        _ => {},
+        _ => {}
     }
 
     let area = centered_rect(60, 25, frame.area());
@@ -143,7 +160,9 @@ pub fn ui(
             s => s,
         };
         let key_text = Paragraph::new(trimmed).block(key_block);
-        let value_text = Paragraph::new(editing.value.clone()).block(value_block);
+        let value_text = Paragraph::new(editing.value.clone())
+            .block(value_block)
+            .wrap(Wrap { trim: false });
 
         frame.render_widget(key_text, popup_chunks[0]);
         frame.render_widget(value_text, popup_chunks[1]);
@@ -165,7 +184,9 @@ pub fn ui(
                 .len()
         ))
         .block(key_block);
-        let value_text = Paragraph::new(adding.value.clone()).block(value_block);
+        let value_text = Paragraph::new(adding.value.clone())
+            .block(value_block)
+            .wrap(Wrap { trim: false });
 
         frame.render_widget(key_text, popup_chunks[0]);
         frame.render_widget(value_text, popup_chunks[1]);
